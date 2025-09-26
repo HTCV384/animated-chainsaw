@@ -126,8 +126,7 @@ def fetch_azure_blob_data():
         
         # Create blob service client with SAS token
         account_url = f"https://{account_name}.blob.core.windows.net"
-        sas_url = f"{account_url}/{container_name}?{sas_token}"
-        blob_service_client = BlobServiceClient(account_url=sas_url)
+        blob_service_client = BlobServiceClient(account_url=account_url, credential=sas_token)
         container_client = blob_service_client.get_container_client(container_name)
         
         st.info("🔍 Discovering hospital folders in Azure Blob Storage...")
