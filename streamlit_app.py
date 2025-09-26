@@ -693,16 +693,30 @@ def main():
                 # Direct download button for SEP_1
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    # Generate image data in memory
-                    img_bytes = sep1_fig.to_image(format="png", width=900, height=600, scale=2)
-                    st.download_button(
-                        label="💾 Save SEP_1 Chart",
-                        data=img_bytes,
-                        file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                        mime="image/png",
-                        key="download_sep1",
-                        help="Click to save the SEP_1 chart as a PNG image"
-                    )
+                    try:
+                        # Try to generate PNG image
+                        img_bytes = sep1_fig.to_image(format="png", width=900, height=600, scale=2)
+                        st.download_button(
+                            label="💾 Save SEP_1 Chart (PNG)",
+                            data=img_bytes,
+                            file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                            mime="image/png",
+                            key="download_sep1_png",
+                            help="Click to save the SEP_1 chart as a PNG image"
+                        )
+                    except Exception as e:
+                        # Fallback to HTML download if PNG generation fails
+                        import plotly.io as pio
+                        html_str = pio.to_html(sep1_fig, include_plotlyjs='cdn')
+                        st.download_button(
+                            label="💾 Save SEP_1 Chart (HTML)",
+                            data=html_str,
+                            file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html",
+                            key="download_sep1_html",
+                            help="PNG generation not available - downloading as interactive HTML chart"
+                        )
+                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
             else:
                 st.warning("⚠️ No SEP_1 data available for selected facilities.")
             
@@ -723,16 +737,30 @@ def main():
                 # Direct download button for OP_18b
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    # Generate image data in memory
-                    img_bytes = op18b_fig.to_image(format="png", width=900, height=600, scale=2)
-                    st.download_button(
-                        label="💾 Save OP_18b Chart",
-                        data=img_bytes,
-                        file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                        mime="image/png",
-                        key="download_op18b",
-                        help="Click to save the OP_18b chart as a PNG image"
-                    )
+                    try:
+                        # Try to generate PNG image
+                        img_bytes = op18b_fig.to_image(format="png", width=900, height=600, scale=2)
+                        st.download_button(
+                            label="💾 Save OP_18b Chart (PNG)",
+                            data=img_bytes,
+                            file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                            mime="image/png",
+                            key="download_op18b_png",
+                            help="Click to save the OP_18b chart as a PNG image"
+                        )
+                    except Exception as e:
+                        # Fallback to HTML download if PNG generation fails
+                        import plotly.io as pio
+                        html_str = pio.to_html(op18b_fig, include_plotlyjs='cdn')
+                        st.download_button(
+                            label="💾 Save OP_18b Chart (HTML)",
+                            data=html_str,
+                            file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html",
+                            key="download_op18b_html",
+                            help="PNG generation not available - downloading as interactive HTML chart"
+                        )
+                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
             else:
                 st.warning("⚠️ No OP_18b data available for selected facilities.")
             
@@ -753,16 +781,30 @@ def main():
                 # Direct download button for Severe Sepsis
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    # Generate image data in memory
-                    img_bytes = severe_sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
-                    st.download_button(
-                        label="💾 Save Severe Sepsis Chart",
-                        data=img_bytes,
-                        file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                        mime="image/png",
-                        key="download_severe",
-                        help="Click to save the Severe Sepsis chart as a PNG image"
-                    )
+                    try:
+                        # Try to generate PNG image
+                        img_bytes = severe_sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
+                        st.download_button(
+                            label="💾 Save Severe Sepsis Chart (PNG)",
+                            data=img_bytes,
+                            file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                            mime="image/png",
+                            key="download_severe_png",
+                            help="Click to save the Severe Sepsis chart as a PNG image"
+                        )
+                    except Exception as e:
+                        # Fallback to HTML download if PNG generation fails
+                        import plotly.io as pio
+                        html_str = pio.to_html(severe_sepsis_fig, include_plotlyjs='cdn')
+                        st.download_button(
+                            label="💾 Save Severe Sepsis Chart (HTML)",
+                            data=html_str,
+                            file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html",
+                            key="download_severe_html",
+                            help="PNG generation not available - downloading as interactive HTML chart"
+                        )
+                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
             else:
                 st.warning("⚠️ No severe sepsis data available for selected facilities.")
             
@@ -783,16 +825,30 @@ def main():
                 # Direct download button for Sepsis Shock
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    # Generate image data in memory
-                    img_bytes = sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
-                    st.download_button(
-                        label="💾 Save Sepsis Shock Chart",
-                        data=img_bytes,
-                        file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                        mime="image/png",
-                        key="download_sepsis",
-                        help="Click to save the Sepsis Shock chart as a PNG image"
-                    )
+                    try:
+                        # Try to generate PNG image
+                        img_bytes = sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
+                        st.download_button(
+                            label="💾 Save Sepsis Shock Chart (PNG)",
+                            data=img_bytes,
+                            file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                            mime="image/png",
+                            key="download_sepsis_png",
+                            help="Click to save the Sepsis Shock chart as a PNG image"
+                        )
+                    except Exception as e:
+                        # Fallback to HTML download if PNG generation fails
+                        import plotly.io as pio
+                        html_str = pio.to_html(sepsis_fig, include_plotlyjs='cdn')
+                        st.download_button(
+                            label="💾 Save Sepsis Shock Chart (HTML)",
+                            data=html_str,
+                            file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                            mime="text/html",
+                            key="download_sepsis_html",
+                            help="PNG generation not available - downloading as interactive HTML chart"
+                        )
+                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
             else:
                 st.warning("⚠️ No sepsis shock data available for selected facilities.")
             
