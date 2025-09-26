@@ -103,7 +103,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def fetch_azure_blob_data():
+def fetch_azure_blob_data(debug_mode=False):
     """
     Fetch CSV files from Azure Blob Storage for hospital data.
     Uses Azure Blob SDK to properly list and access container contents.
@@ -129,7 +129,8 @@ def fetch_azure_blob_data():
         blob_service_client = BlobServiceClient(account_url=account_url, credential=sas_token)
         container_client = blob_service_client.get_container_client(container_name)
         
-        st.info("🔍 Discovering hospital folders in Azure Blob Storage...")
+        if debug_mode:
+            st.info("🔍 Discovering hospital folders in Azure Blob Storage...")
         
         # List all blobs in the container to find hospital folders
         hospital_folders = set()
@@ -152,26 +153,34 @@ def fetch_azure_blob_data():
             
             hospital_folders = sorted(list(hospital_folders))
             
-            # Debug information
-            st.info(f"🔍 Found {len(all_blobs)} total blobs in container")
-            if len(all_blobs) > 0:
-                st.info(f"📁 Sample blob names: {', '.join(all_blobs[:5])}")
-                if len(all_blobs) > 5:
-                    st.info(f"... and {len(all_blobs) - 5} more blobs")
-            
-            if hospital_folders:
-                st.success(f"✓ Found {len(hospital_folders)} hospital folders: {', '.join(hospital_folders)}")
-            else:
-                st.warning("⚠ No hospital folders found matching pattern 'hospitals_XX_XXXX'")
-                st.info("💡 **Debug Info:**")
-                st.info(f"- Total blobs found: {len(all_blobs)}")
-                if all_blobs:
-                    st.info(f"- First few blob names: {all_blobs[:10]}")
-                    st.info("- Expected pattern: folders named like 'hospitals_01_2021/', 'hospitals_02_2022/', etc.")
-                    st.info("- Check if your data is organized in folders or if folder names follow a different pattern")
+            # Enhanced debug information for debug mode
+            if debug_mode:
+                st.info(f"🔍 Found {len(all_blobs)} total blobs in container")
+                if len(all_blobs) > 0:
+                    st.info(f"📁 Sample blob names: {', '.join(all_blobs[:5])}")
+                    if len(all_blobs) > 5:
+                        st.info(f"... and {len(all_blobs) - 5} more blobs")
+                
+                if hospital_folders:
+                    st.success(f"✓ Found {len(hospital_folders)} hospital folders: {', '.join(hospital_folders)}")
                 else:
-                    st.info("- Container appears to be empty")
-                return {}
+                    st.warning("⚠ No hospital folders found matching pattern 'hospitals_XX_XXXX'")
+                    st.info("💡 **Debug Info:**")
+                    st.info(f"- Total blobs found: {len(all_blobs)}")
+                    if all_blobs:
+                        st.info(f"- First few blob names: {all_blobs[:10]}")
+                        st.info("- Expected pattern: folders named like 'hospitals_01_2021/', 'hospitals_02_2022/', etc.")
+                        st.info("- Check if your data is organized in folders or if folder names follow a different pattern")
+                    else:
+                        st.info("- Container appears to be empty")
+                    return {}
+            else:
+                # Minimal info for non-debug mode
+                if hospital_folders:
+                    st.info(f"🔍 Found {len(hospital_folders)} hospital data folders")
+                else:
+                    st.warning("⚠ No hospital folders found")
+                    return {}
                 
         except Exception as e:
             st.error(f"❌ Error listing blobs: {str(e)}")
@@ -194,15 +203,43 @@ def fetch_azure_blob_data():
                 # Parse CSV
                 df = pd.read_csv(io.StringIO(csv_content))
                 data_dict[folder] = df
-                st.success(f"✓ Loaded {folder} ({len(df)} records) via Azure SDK")
                 
+                if debug_mode:
+                    st.success(f"✓ Loaded {folder} ({len(df)} records) via Azure SDK")
+                
+            except UnicodeDecodeError as e:
+                if debug_mode:
+                    st.warning(f"⚠ Could not load {csv_blob_name}: 'utf-8' codec can't decode byte {hex(e.args[2])} in position {e.args[3]}: invalid start byte")
+                continue
             except Exception as e:
-                st.warning(f"⚠ Could not load {csv_blob_name}: {str(e)}")
+                if debug_mode:
+                    st.warning(f"⚠ Could not load {csv_blob_name}: {str(e)}")
                 continue
         
         if not data_dict:
             st.error("❌ No hospital data files found")
             st.info("💡 Ensure each hospital folder contains 'Timely_and_Effective_Care-Hospital.csv'")
+        elif debug_mode:
+            # Show comprehensive debug summary
+            st.markdown("### 📊 Available Data Analysis")
+            if data_dict:
+                # Combine all data for analysis
+                all_data = pd.concat(list(data_dict.values()), ignore_index=True)
+                available_measures = sorted(all_data['Measure ID'].dropna().unique())
+                st.info(f"🔍 Found {len(available_measures)} measure types in data:")
+                st.info(f"📋 Measure IDs: {', '.join(available_measures[:10])}")
+                if len(available_measures) > 10:
+                    st.info(f"... and {len(available_measures) - 10} more measures")
+                
+                # Show which target measures we're looking for
+                target_measures = ['SEP_1', 'OP_18b', 'SEV_SH_3HR', 'SEV_SEP_6HR', 'SEP_SH_3HR', 'SEP_SH_6HR']
+                found_targets = [m for m in target_measures if m in available_measures]
+                missing_targets = [m for m in target_measures if m not in available_measures]
+                
+                if found_targets:
+                    st.success(f"✅ Found target measures: {', '.join(found_targets)}")
+                if missing_targets:
+                    st.warning(f"⚠️ Missing target measures: {', '.join(missing_targets)}")
         
         return data_dict
         
@@ -531,7 +568,7 @@ def main():
         
         with st.spinner("🔄 Fetching data from Azure Blob Storage..."):
             # Fetch data from Azure Blob
-            data_dict = fetch_azure_blob_data()
+            data_dict = fetch_azure_blob_data(debug_mode=verbose_mode)
             
             if not data_dict:
                 st.error("❌ No data could be loaded from Azure Blob Storage.")
@@ -653,19 +690,19 @@ def main():
             if sep1_fig:
                 st.plotly_chart(sep1_fig, use_container_width=True)
                 
-                # Save button for SEP_1
+                # Direct download button for SEP_1
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    if st.button("💾 Save SEP_1 Chart", key="save_sep1"):
-                        sep1_fig.write_image("SEP_1_Analysis.png", width=900, height=600, scale=2)
-                        with open("SEP_1_Analysis.png", "rb") as file:
-                            st.download_button(
-                                label="📥 Download SEP_1 Chart",
-                                data=file.read(),
-                                file_name="SEP_1_Analysis.png",
-                                mime="image/png",
-                                key="download_sep1"
-                            )
+                    # Generate image data in memory
+                    img_bytes = sep1_fig.to_image(format="png", width=900, height=600, scale=2)
+                    st.download_button(
+                        label="💾 Save SEP_1 Chart",
+                        data=img_bytes,
+                        file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                        mime="image/png",
+                        key="download_sep1",
+                        help="Click to save the SEP_1 chart as a PNG image"
+                    )
             else:
                 st.warning("⚠️ No SEP_1 data available for selected facilities.")
             
@@ -683,18 +720,19 @@ def main():
             if op18b_fig:
                 st.plotly_chart(op18b_fig, use_container_width=True)
                 
+                # Direct download button for OP_18b
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    if st.button("💾 Save OP_18b Chart", key="save_op18b"):
-                        op18b_fig.write_image("OP_18b_Analysis.png", width=900, height=600, scale=2)
-                        with open("OP_18b_Analysis.png", "rb") as file:
-                            st.download_button(
-                                label="📥 Download OP_18b Chart", 
-                                data=file.read(),
-                                file_name="OP_18b_Analysis.png",
-                                mime="image/png",
-                                key="download_op18b"
-                            )
+                    # Generate image data in memory
+                    img_bytes = op18b_fig.to_image(format="png", width=900, height=600, scale=2)
+                    st.download_button(
+                        label="💾 Save OP_18b Chart",
+                        data=img_bytes,
+                        file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                        mime="image/png",
+                        key="download_op18b",
+                        help="Click to save the OP_18b chart as a PNG image"
+                    )
             else:
                 st.warning("⚠️ No OP_18b data available for selected facilities.")
             
@@ -712,18 +750,19 @@ def main():
             if severe_sepsis_fig:
                 st.plotly_chart(severe_sepsis_fig, use_container_width=True)
                 
+                # Direct download button for Severe Sepsis
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    if st.button("💾 Save Severe Sepsis Chart", key="save_severe"):
-                        severe_sepsis_fig.write_image("Severe_Sepsis_Analysis.png", width=900, height=600, scale=2)
-                        with open("Severe_Sepsis_Analysis.png", "rb") as file:
-                            st.download_button(
-                                label="📥 Download Severe Sepsis Chart",
-                                data=file.read(),
-                                file_name="Severe_Sepsis_Analysis.png",
-                                mime="image/png",
-                                key="download_severe"
-                            )
+                    # Generate image data in memory
+                    img_bytes = severe_sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
+                    st.download_button(
+                        label="💾 Save Severe Sepsis Chart",
+                        data=img_bytes,
+                        file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                        mime="image/png",
+                        key="download_severe",
+                        help="Click to save the Severe Sepsis chart as a PNG image"
+                    )
             else:
                 st.warning("⚠️ No severe sepsis data available for selected facilities.")
             
@@ -741,18 +780,19 @@ def main():
             if sepsis_fig:
                 st.plotly_chart(sepsis_fig, use_container_width=True)
                 
+                # Direct download button for Sepsis Shock
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    if st.button("💾 Save Sepsis Shock Chart", key="save_sepsis"):
-                        sepsis_fig.write_image("Sepsis_Shock_Analysis.png", width=900, height=600, scale=2)
-                        with open("Sepsis_Shock_Analysis.png", "rb") as file:
-                            st.download_button(
-                                label="📥 Download Sepsis Shock Chart",
-                                data=file.read(), 
-                                file_name="Sepsis_Shock_Analysis.png",
-                                mime="image/png",
-                                key="download_sepsis"
-                            )
+                    # Generate image data in memory
+                    img_bytes = sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
+                    st.download_button(
+                        label="💾 Save Sepsis Shock Chart",
+                        data=img_bytes,
+                        file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                        mime="image/png",
+                        key="download_sepsis",
+                        help="Click to save the Sepsis Shock chart as a PNG image"
+                    )
             else:
                 st.warning("⚠️ No sepsis shock data available for selected facilities.")
             
