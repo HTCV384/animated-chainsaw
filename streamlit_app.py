@@ -232,53 +232,63 @@ def find_facility_matches(user_facilities, available_facilities):
     
     return matched_facilities
 
-def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_facilities=None):
+def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_facilities=None, verbose=False):
     """Create interactive Plotly chart with facility selection."""
     
     # Debug: Show what we're looking for vs what we have
-    st.write(f"🔍 DEBUG: Looking for measure '{measure_id}'")
-    st.write(f"📊 DEBUG: Available measures in data: {sorted(data['Measure ID'].unique())[:10]}...")
-    st.write(f"📏 DEBUG: Total rows in data: {len(data)}")
+    if verbose:
+        st.write(f"🔍 DEBUG: Looking for measure '{measure_id}'")
+        st.write(f"📊 DEBUG: Available measures in data: {sorted(data['Measure ID'].unique())[:10]}...")
+        st.write(f"📏 DEBUG: Total rows in data: {len(data)}")
     
     # Filter data for the specific measure
     measure_data = data[data['Measure ID'] == measure_id].copy()
-    st.write(f"📋 DEBUG: Found {len(measure_data)} rows for measure '{measure_id}'")
+    if verbose:
+        st.write(f"📋 DEBUG: Found {len(measure_data)} rows for measure '{measure_id}'")
     
     if measure_data.empty:
-        st.write(f"❌ DEBUG: No data found for measure '{measure_id}'")
+        if verbose:
+            st.write(f"❌ DEBUG: No data found for measure '{measure_id}'")
         return None
     
     # Clean data with detailed debugging
-    st.write(f"🧹 DEBUG: Before cleaning - {len(measure_data)} rows")
-    
-    # Check Score values
-    score_values = measure_data['Score'].value_counts()
-    st.write(f"📊 DEBUG: Score values: {dict(score_values.head())}")
+    if verbose:
+        st.write(f"🧹 DEBUG: Before cleaning - {len(measure_data)} rows")
+        
+        # Check Score values
+        score_values = measure_data['Score'].value_counts()
+        st.write(f"📊 DEBUG: Score values: {dict(score_values.head())}")
     
     measure_data = measure_data[measure_data['Score'] != 'Not Available']
-    st.write(f"🚫 DEBUG: After removing 'Not Available' - {len(measure_data)} rows")
+    if verbose:
+        st.write(f"🚫 DEBUG: After removing 'Not Available' - {len(measure_data)} rows")
     
     measure_data = measure_data.dropna(subset=['Score', 'End Date'])
-    st.write(f"💧 DEBUG: After dropping NaN Score/End Date - {len(measure_data)} rows")
-    
-    # Check what Score values look like before conversion
-    if not measure_data.empty:
-        st.write(f"🔢 DEBUG: Sample Score values before conversion: {measure_data['Score'].head().tolist()}")
+    if verbose:
+        st.write(f"💧 DEBUG: After dropping NaN Score/End Date - {len(measure_data)} rows")
+        
+        # Check what Score values look like before conversion
+        if not measure_data.empty:
+            st.write(f"🔢 DEBUG: Sample Score values before conversion: {measure_data['Score'].head().tolist()}")
     
     measure_data['Score'] = pd.to_numeric(measure_data['Score'], errors='coerce')
-    st.write(f"🔄 DEBUG: After numeric conversion - {len(measure_data)} rows")
+    if verbose:
+        st.write(f"🔄 DEBUG: After numeric conversion - {len(measure_data)} rows")
     
     measure_data = measure_data.dropna(subset=['Score'])
-    st.write(f"🧮 DEBUG: After dropping NaN converted scores - {len(measure_data)} rows")
+    if verbose:
+        st.write(f"🧮 DEBUG: After dropping NaN converted scores - {len(measure_data)} rows")
     
     if measure_data.empty:
-        st.write(f"❌ DEBUG: All data filtered out during cleaning process")
+        if verbose:
+            st.write(f"❌ DEBUG: All data filtered out during cleaning process")
         return None
     
     # Parse dates with debugging
-    st.write(f"📅 DEBUG: Before date parsing - {len(measure_data)} rows")
-    if not measure_data.empty:
-        st.write(f"📅 DEBUG: Sample End Date values: {measure_data['End Date'].head().tolist()}")
+    if verbose:
+        st.write(f"📅 DEBUG: Before date parsing - {len(measure_data)} rows")
+        if not measure_data.empty:
+            st.write(f"📅 DEBUG: Sample End Date values: {measure_data['End Date'].head().tolist()}")
     
     try:
         # Try multiple date formats to handle both 2-digit and 4-digit years
@@ -295,20 +305,24 @@ def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_
             measure_data['End_Date_Parsed'] = pd.to_datetime(measure_data['End Date'], 
                                                             infer_datetime_format=True, errors='coerce')
         
-        st.write(f"📅 DEBUG: After date parsing - {len(measure_data)} rows")
-        
-        # Check how many valid dates we got
-        valid_dates = measure_data['End_Date_Parsed'].notna().sum()
-        st.write(f"📅 DEBUG: Valid dates found: {valid_dates}")
+        if verbose:
+            st.write(f"📅 DEBUG: After date parsing - {len(measure_data)} rows")
+            
+            # Check how many valid dates we got
+            valid_dates = measure_data['End_Date_Parsed'].notna().sum()
+            st.write(f"📅 DEBUG: Valid dates found: {valid_dates}")
         
         measure_data = measure_data.dropna(subset=['End_Date_Parsed'])
-        st.write(f"📅 DEBUG: After dropping invalid dates - {len(measure_data)} rows")
+        if verbose:
+            st.write(f"📅 DEBUG: After dropping invalid dates - {len(measure_data)} rows")
     except Exception as e:
-        st.write(f"❌ DEBUG: Date parsing failed with error: {str(e)}")
+        if verbose:
+            st.write(f"❌ DEBUG: Date parsing failed with error: {str(e)}")
         return None
     
     if measure_data.empty:
-        st.write(f"❌ DEBUG: All data lost after date parsing")
+        if verbose:
+            st.write(f"❌ DEBUG: All data lost after date parsing")
         return None
     
     # Create Plotly figure with 3:2 aspect ratio
@@ -499,6 +513,11 @@ def main():
         label_visibility="collapsed"
     )
     
+    # Debug mode toggle
+    with st.expander("⚙️ Advanced Settings", expanded=False):
+        verbose_mode = st.checkbox("🔍 Enable Verbose Debug Output", value=False, 
+                                 help="Show detailed debugging information during data processing")
+    
     # Analysis button
     analyze_button = st.button("🔍 Analyze Hospital Data", type="primary", use_container_width=True)
     
@@ -628,7 +647,7 @@ def main():
             """, unsafe_allow_html=True)
             
             sep1_fig = create_interactive_plot(
-                chart_data, 'SEP_1', 'SEP_1 Score Over Time', 'SEP_1 Score (%)', [0, 100], selected_facilities
+                chart_data, 'SEP_1', 'SEP_1 Score Over Time', 'SEP_1 Score (%)', [0, 100], selected_facilities, verbose_mode
             )
             
             if sep1_fig:
@@ -658,7 +677,7 @@ def main():
             """, unsafe_allow_html=True)
             
             op18b_fig = create_interactive_plot(
-                chart_data, 'OP_18b', 'Time in Emergency Department', 'Time in ED (minutes)', [60, 250], selected_facilities
+                chart_data, 'OP_18b', 'Time in Emergency Department', 'Time in ED (minutes)', [60, 250], selected_facilities, verbose_mode
             )
             
             if op18b_fig:
