@@ -382,7 +382,7 @@ def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_
     
     return fig
 
-def create_combined_sepsis_plot(data, measures, title, selected_facilities=None):
+def create_combined_sepsis_plot(data, measures, title, selected_facilities=None, y_range=[0, 100]):
     """Create combined plot for multiple sepsis measures."""
     
     # Filter for sepsis measures
@@ -471,7 +471,7 @@ def create_combined_sepsis_plot(data, measures, title, selected_facilities=None)
         },
         xaxis_title="End Date",
         yaxis_title="Score (%)",
-        yaxis=dict(range=[0, 100]),
+        yaxis=dict(range=y_range),
         width=900,
         height=600,
         template="plotly_white",
@@ -706,7 +706,7 @@ def main():
             """, unsafe_allow_html=True)
             
             severe_sepsis_fig = create_combined_sepsis_plot(
-                chart_data, ['SEV_SH_3HR', 'SEV_SEP_6HR'], 'Severe Sepsis Measures Over Time', selected_facilities
+                chart_data, ['SEV_SH_3HR', 'SEV_SEP_6HR'], 'Severe Sepsis Measures Over Time', selected_facilities, [0, 150]
             )
             
             if severe_sepsis_fig:
