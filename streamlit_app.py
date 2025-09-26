@@ -251,6 +251,38 @@ def fetch_azure_blob_data(debug_mode=False):
         st.info("3. Ensure container name and account name are correct")
         return {}
 
+def wrap_legend_text(text, max_length=25):
+    """
+    Wrap legend text to prevent legend from taking too much space.
+    Does not truncate - only wraps long text to multiple lines.
+    
+    Args:
+        text: Original legend text
+        max_length: Maximum characters per line (default 25)
+    
+    Returns:
+        Wrapped text with line breaks
+    """
+    if len(text) <= max_length:
+        return text
+    
+    # Find a good break point (prefer breaking at spaces, hyphens, or underscores)
+    break_chars = [' ', '-', '_']
+    best_break = max_length
+    
+    for char in break_chars:
+        pos = text.rfind(char, 0, max_length)
+        if pos > max_length // 2:  # Don't break too early
+            best_break = pos
+            break
+    
+    if best_break == max_length:
+        # No good break point found, force break at max_length
+        return text[:max_length] + '<br>' + wrap_legend_text(text[max_length:], max_length)
+    else:
+        # Break at the good position and continue with next line
+        return text[:best_break] + '<br>' + wrap_legend_text(text[best_break+1:], max_length)
+
 def find_facility_matches(user_facilities, available_facilities):
     """Find exact or fuzzy matches for user-provided facility names."""
     matched_facilities = []
@@ -379,11 +411,14 @@ def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_
             if selected_facilities is not None:
                 visible = facility in selected_facilities
                 
+            # Apply legend text wrapping for better display
+            wrapped_facility_name = wrap_legend_text(facility)
+            
             fig.add_trace(go.Scatter(
                 x=facility_data['End_Date_Parsed'],
                 y=facility_data['Score'],
                 mode='lines+markers',
-                name=facility,
+                name=wrapped_facility_name,
                 line=dict(color=colors[i % len(colors)], width=3),
                 marker=dict(size=8, line=dict(width=2, color='white')),
                 visible=visible,
@@ -481,11 +516,15 @@ def create_combined_sepsis_plot(data, measures, title, selected_facilities=None,
                 if selected_facilities is not None:
                     visible = facility in selected_facilities
                 
+                # Create combined label and apply text wrapping
+                combined_label = f"{facility} - {measure}"
+                wrapped_label = wrap_legend_text(combined_label)
+                
                 fig.add_trace(go.Scatter(
                     x=measure_data['End_Date_Parsed'],
                     y=measure_data['Score'],
                     mode='lines+markers',
-                    name=f"{facility} - {measure}",
+                    name=wrapped_label,
                     line=dict(
                         color=colors[i % len(colors)], 
                         width=3,
@@ -689,45 +728,6 @@ def main():
             
             if sep1_fig:
                 st.plotly_chart(sep1_fig, use_container_width=True)
-                
-                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
-                try:
-                    # Import and configure kaleido/plotly
-                    import plotly.io as pio
-                    
-                    # Try to generate PNG image in advance
-                    sep1_png_bytes = sep1_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
-                    png_success = True
-                    png_error = None
-                except Exception as e:
-                    png_success = False
-                    png_error = str(e)
-                    # Generate HTML as fallback
-                    sep1_html_str = pio.to_html(sep1_fig, include_plotlyjs='cdn')
-                
-                # Download button for SEP_1
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if png_success:
-                        st.download_button(
-                            label="💾 Save SEP_1 Chart",
-                            data=sep1_png_bytes,
-                            file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                            mime="image/png",
-                            key="download_sep1",
-                            help="Click to save the SEP_1 chart as a high-quality PNG image"
-                        )
-                    else:
-                        st.download_button(
-                            label="💾 Save SEP_1 Chart (HTML)",
-                            data=sep1_html_str,
-                            file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                            mime="text/html",
-                            key="download_sep1",
-                            help="PNG generation failed - downloading as interactive HTML chart"
-                        )
-                        st.warning(f"⚠️ PNG generation failed: {png_error}")
-                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No SEP_1 data available for selected facilities.")
             
@@ -744,45 +744,6 @@ def main():
             
             if op18b_fig:
                 st.plotly_chart(op18b_fig, use_container_width=True)
-                
-                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
-                try:
-                    # Import and configure kaleido/plotly
-                    import plotly.io as pio
-                    
-                    # Try to generate PNG image in advance
-                    op18b_png_bytes = op18b_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
-                    png_success = True
-                    png_error = None
-                except Exception as e:
-                    png_success = False
-                    png_error = str(e)
-                    # Generate HTML as fallback
-                    op18b_html_str = pio.to_html(op18b_fig, include_plotlyjs='cdn')
-                
-                # Download button for OP_18b
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if png_success:
-                        st.download_button(
-                            label="💾 Save OP_18b Chart",
-                            data=op18b_png_bytes,
-                            file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                            mime="image/png",
-                            key="download_op18b",
-                            help="Click to save the OP_18b chart as a high-quality PNG image"
-                        )
-                    else:
-                        st.download_button(
-                            label="💾 Save OP_18b Chart (HTML)",
-                            data=op18b_html_str,
-                            file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                            mime="text/html",
-                            key="download_op18b",
-                            help="PNG generation failed - downloading as interactive HTML chart"
-                        )
-                        st.warning(f"⚠️ PNG generation failed: {png_error}")
-                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No OP_18b data available for selected facilities.")
             
@@ -799,45 +760,6 @@ def main():
             
             if severe_sepsis_fig:
                 st.plotly_chart(severe_sepsis_fig, use_container_width=True)
-                
-                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
-                try:
-                    # Import and configure kaleido/plotly
-                    import plotly.io as pio
-                    
-                    # Try to generate PNG image in advance
-                    severe_sepsis_png_bytes = severe_sepsis_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
-                    png_success = True
-                    png_error = None
-                except Exception as e:
-                    png_success = False
-                    png_error = str(e)
-                    # Generate HTML as fallback
-                    severe_sepsis_html_str = pio.to_html(severe_sepsis_fig, include_plotlyjs='cdn')
-                
-                # Download button for Severe Sepsis
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if png_success:
-                        st.download_button(
-                            label="💾 Save Severe Sepsis Chart",
-                            data=severe_sepsis_png_bytes,
-                            file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                            mime="image/png",
-                            key="download_severe",
-                            help="Click to save the Severe Sepsis chart as a high-quality PNG image"
-                        )
-                    else:
-                        st.download_button(
-                            label="💾 Save Severe Sepsis Chart (HTML)",
-                            data=severe_sepsis_html_str,
-                            file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                            mime="text/html",
-                            key="download_severe",
-                            help="PNG generation failed - downloading as interactive HTML chart"
-                        )
-                        st.warning(f"⚠️ PNG generation failed: {png_error}")
-                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No severe sepsis data available for selected facilities.")
             
@@ -854,45 +776,6 @@ def main():
             
             if sepsis_fig:
                 st.plotly_chart(sepsis_fig, use_container_width=True)
-                
-                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
-                try:
-                    # Import and configure kaleido/plotly
-                    import plotly.io as pio
-                    
-                    # Try to generate PNG image in advance
-                    sepsis_png_bytes = sepsis_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
-                    png_success = True
-                    png_error = None
-                except Exception as e:
-                    png_success = False
-                    png_error = str(e)
-                    # Generate HTML as fallback
-                    sepsis_html_str = pio.to_html(sepsis_fig, include_plotlyjs='cdn')
-                
-                # Download button for Sepsis Shock
-                col1, col2 = st.columns([1, 4])
-                with col1:
-                    if png_success:
-                        st.download_button(
-                            label="💾 Save Sepsis Shock Chart",
-                            data=sepsis_png_bytes,
-                            file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-                            mime="image/png",
-                            key="download_sepsis",
-                            help="Click to save the Sepsis Shock chart as a high-quality PNG image"
-                        )
-                    else:
-                        st.download_button(
-                            label="💾 Save Sepsis Shock Chart (HTML)",
-                            data=sepsis_html_str,
-                            file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
-                            mime="text/html",
-                            key="download_sepsis",
-                            help="PNG generation failed - downloading as interactive HTML chart"
-                        )
-                        st.warning(f"⚠️ PNG generation failed: {png_error}")
-                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No sepsis shock data available for selected facilities.")
             
@@ -906,7 +789,7 @@ def main():
             
             csv_data = result_df.to_csv(index=False)
             st.download_button(
-                label="📊 Download Complete Dataset (CSV)",
+                label="� Download Complete Dataset (CSV)",
                 data=csv_data,
                 file_name=f"Hospital_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv",
