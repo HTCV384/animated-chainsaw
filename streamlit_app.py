@@ -248,13 +248,31 @@ def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_
         st.write(f"❌ DEBUG: No data found for measure '{measure_id}'")
         return None
     
-    # Clean data
+    # Clean data with detailed debugging
+    st.write(f"🧹 DEBUG: Before cleaning - {len(measure_data)} rows")
+    
+    # Check Score values
+    score_values = measure_data['Score'].value_counts()
+    st.write(f"📊 DEBUG: Score values: {dict(score_values.head())}")
+    
     measure_data = measure_data[measure_data['Score'] != 'Not Available']
+    st.write(f"🚫 DEBUG: After removing 'Not Available' - {len(measure_data)} rows")
+    
     measure_data = measure_data.dropna(subset=['Score', 'End Date'])
+    st.write(f"💧 DEBUG: After dropping NaN Score/End Date - {len(measure_data)} rows")
+    
+    # Check what Score values look like before conversion
+    if not measure_data.empty:
+        st.write(f"🔢 DEBUG: Sample Score values before conversion: {measure_data['Score'].head().tolist()}")
+    
     measure_data['Score'] = pd.to_numeric(measure_data['Score'], errors='coerce')
+    st.write(f"🔄 DEBUG: After numeric conversion - {len(measure_data)} rows")
+    
     measure_data = measure_data.dropna(subset=['Score'])
+    st.write(f"🧮 DEBUG: After dropping NaN converted scores - {len(measure_data)} rows")
     
     if measure_data.empty:
+        st.write(f"❌ DEBUG: All data filtered out during cleaning process")
         return None
     
     # Parse dates
