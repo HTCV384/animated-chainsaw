@@ -235,10 +235,17 @@ def find_facility_matches(user_facilities, available_facilities):
 def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_facilities=None):
     """Create interactive Plotly chart with facility selection."""
     
+    # Debug: Show what we're looking for vs what we have
+    st.write(f"🔍 DEBUG: Looking for measure '{measure_id}'")
+    st.write(f"📊 DEBUG: Available measures in data: {sorted(data['Measure ID'].unique())[:10]}...")
+    st.write(f"📏 DEBUG: Total rows in data: {len(data)}")
+    
     # Filter data for the specific measure
     measure_data = data[data['Measure ID'] == measure_id].copy()
+    st.write(f"📋 DEBUG: Found {len(measure_data)} rows for measure '{measure_id}'")
     
     if measure_data.empty:
+        st.write(f"❌ DEBUG: No data found for measure '{measure_id}'")
         return None
     
     # Clean data
