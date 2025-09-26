@@ -106,7 +106,7 @@ st.markdown("""
 def fetch_azure_blob_data():
     """
     Fetch CSV files from Azure Blob Storage for hospital data.
-    Supports both anonymous access and SAS token authentication.
+    Uses Azure Blob SDK to properly list and access container contents.
     Returns a dictionary of dataframes keyed by folder name.
     """
     try:
@@ -116,67 +116,76 @@ def fetch_azure_blob_data():
         container_name = azure_config.get("container_name", "cmstest")
         sas_token = azure_config.get("sas_token")
         
-        # Build base URL
-        base_url = f"https://{account_name}.blob.core.windows.net/{container_name}"
+        if not sas_token:
+            st.error("❌ SAS token is required for container listing and data access")
+            st.info("💡 Please add your SAS token to the Streamlit secrets configuration")
+            return {}
         
-        # Known hospital folders to check
-        hospital_folders = [
-            "hospitals_01_2021", "hospitals_01_2022", "hospitals_01_2023", "hospitals_01_2024",
-            "hospitals_02_2021", "hospitals_02_2022", "hospitals_02_2023", "hospitals_02_2024",
-            "hospitals_03_2021", "hospitals_03_2022", "hospitals_03_2023", "hospitals_03_2024",
-            "hospitals_04_2021", "hospitals_04_2022", "hospitals_04_2023", "hospitals_04_2024",
-            "hospitals_05_2021", "hospitals_05_2022", "hospitals_05_2023", "hospitals_05_2024",
-            "hospitals_06_2021", "hospitals_06_2022", "hospitals_06_2023", "hospitals_06_2024"
-        ]
+        # Import Azure SDK
+        from azure.storage.blob import BlobServiceClient
         
+        # Create blob service client with SAS token
+        account_url = f"https://{account_name}.blob.core.windows.net"
+        sas_url = f"{account_url}/{container_name}?{sas_token}"
+        blob_service_client = BlobServiceClient(account_url=sas_url)
+        container_client = blob_service_client.get_container_client(container_name)
+        
+        st.info("🔍 Discovering hospital folders in Azure Blob Storage...")
+        
+        # List all blobs in the container to find hospital folders
+        hospital_folders = set()
+        blob_list = container_client.list_blobs()
+        
+        import re
+        hospital_pattern = re.compile(r'^hospitals_\d{2}_\d{4}/')
+        
+        for blob in blob_list:
+            # Check if blob path matches hospital folder pattern
+            if hospital_pattern.match(blob.name):
+                folder_name = blob.name.split('/')[0]
+                hospital_folders.add(folder_name)
+        
+        hospital_folders = sorted(list(hospital_folders))
+        st.success(f"✓ Found {len(hospital_folders)} hospital folders: {', '.join(hospital_folders)}")
+        
+        if not hospital_folders:
+            st.warning("⚠ No hospital folders found matching pattern 'hospitals_XX_XXXX'")
+            return {}
+        
+        # Load data from discovered hospital folders
         data_dict = {}
-        access_method = "SAS token" if sas_token else "anonymous"
         
         for folder in hospital_folders:
-            csv_url = f"{base_url}/{folder}/Timely_and_Effective_Care-Hospital.csv"
+            csv_blob_name = f"{folder}/Timely_and_Effective_Care-Hospital.csv"
             
             try:
-                # Try SAS token authentication first if available
-                if sas_token:
-                    csv_url_with_sas = f"{csv_url}?{sas_token}"
-                    response = requests.get(csv_url_with_sas, timeout=30)
-                else:
-                    # Fall back to anonymous access if no SAS token
-                    response = requests.get(csv_url, timeout=30)
-                    access_method = "anonymous"
+                blob_client = container_client.get_blob_client(csv_blob_name)
                 
-                if response.status_code == 200:
-                    df = pd.read_csv(io.StringIO(response.text))
-                    data_dict[folder] = df
-                    st.success(f"✓ Loaded {folder} ({len(df)} records) via {access_method}")
-                elif response.status_code == 404:
-                    # File doesn't exist - this is normal for some folders
-                    continue
-                else:
-                    st.warning(f"⚠ Could not access {folder} (Status: {response.status_code})")
-                    
+                # Download blob content
+                blob_data = blob_client.download_blob()
+                csv_content = blob_data.content_as_text()
+                
+                # Parse CSV
+                df = pd.read_csv(io.StringIO(csv_content))
+                data_dict[folder] = df
+                st.success(f"✓ Loaded {folder} ({len(df)} records) via Azure SDK")
+                
             except Exception as e:
-                st.warning(f"⚠ Error loading {folder}: {str(e)}")
+                st.warning(f"⚠ Could not load {csv_blob_name}: {str(e)}")
+                continue
         
         if not data_dict:
-            st.error("❌ No hospital data found. Please check:")
-            st.error("🔹 Azure Blob Storage configuration")
-            st.error("🔹 Anonymous access settings or SAS token")
-            st.error("🔹 Hospital folder names and file locations")
-            
-            # Provide troubleshooting info
-            st.info("💡 **Troubleshooting Tips:**")
-            st.info("1. Verify anonymous access is enabled in Azure Portal")
-            st.info("2. Check that hospital folders exist in the container")
-            st.info("3. Or add SAS token to Streamlit secrets for authenticated access")
+            st.error("❌ No hospital data files found")
+            st.info("💡 Ensure each hospital folder contains 'Timely_and_Effective_Care-Hospital.csv'")
         
         return data_dict
         
     except Exception as e:
-        st.error(f"❌ Error fetching Azure Blob data: {str(e)}")
-        st.info("💡 **Check Azure Configuration:**")
-        st.info("- Ensure anonymous access is enabled, OR")
-        st.info("- Add SAS token to `.streamlit/secrets.toml`")
+        st.error(f"❌ Error accessing Azure Blob Storage: {str(e)}")
+        st.info("💡 **Troubleshooting:**")
+        st.info("1. Verify SAS token has 'read' and 'list' permissions")
+        st.info("2. Check that SAS token has not expired")
+        st.info("3. Ensure container name and account name are correct")
         return {}
 
 def find_facility_matches(user_facilities, available_facilities):
