@@ -281,8 +281,20 @@ def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_
         st.write(f"📅 DEBUG: Sample End Date values: {measure_data['End Date'].head().tolist()}")
     
     try:
+        # Try multiple date formats to handle both 2-digit and 4-digit years
         measure_data['End_Date_Parsed'] = pd.to_datetime(measure_data['End Date'], 
-                                                        format='%m/%d/%y', errors='coerce')
+                                                        format='%m/%d/%Y', errors='coerce')
+        
+        # If 4-digit year format fails, try 2-digit year format
+        if measure_data['End_Date_Parsed'].isna().all():
+            measure_data['End_Date_Parsed'] = pd.to_datetime(measure_data['End Date'], 
+                                                            format='%m/%d/%y', errors='coerce')
+        
+        # If both specific formats fail, try automatic inference
+        if measure_data['End_Date_Parsed'].isna().all():
+            measure_data['End_Date_Parsed'] = pd.to_datetime(measure_data['End Date'], 
+                                                            infer_datetime_format=True, errors='coerce')
+        
         st.write(f"📅 DEBUG: After date parsing - {len(measure_data)} rows")
         
         # Check how many valid dates we got
@@ -374,10 +386,22 @@ def create_combined_sepsis_plot(data, measures, title, selected_facilities=None)
     if sepsis_data.empty:
         return None
     
-    # Parse dates
+    # Parse dates with multiple format support
     try:
+        # Try 4-digit year format first (matches your data)
         sepsis_data['End_Date_Parsed'] = pd.to_datetime(sepsis_data['End Date'], 
-                                                       format='%m/%d/%y', errors='coerce')
+                                                       format='%m/%d/%Y', errors='coerce')
+        
+        # If 4-digit year format fails, try 2-digit year format
+        if sepsis_data['End_Date_Parsed'].isna().all():
+            sepsis_data['End_Date_Parsed'] = pd.to_datetime(sepsis_data['End Date'], 
+                                                           format='%m/%d/%y', errors='coerce')
+        
+        # If both specific formats fail, try automatic inference
+        if sepsis_data['End_Date_Parsed'].isna().all():
+            sepsis_data['End_Date_Parsed'] = pd.to_datetime(sepsis_data['End Date'], 
+                                                           infer_datetime_format=True, errors='coerce')
+        
         sepsis_data = sepsis_data.dropna(subset=['End_Date_Parsed'])
     except:
         return None
