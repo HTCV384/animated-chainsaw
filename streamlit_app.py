@@ -275,15 +275,28 @@ def create_interactive_plot(data, measure_id, title, y_label, y_range, selected_
         st.write(f"❌ DEBUG: All data filtered out during cleaning process")
         return None
     
-    # Parse dates
+    # Parse dates with debugging
+    st.write(f"📅 DEBUG: Before date parsing - {len(measure_data)} rows")
+    if not measure_data.empty:
+        st.write(f"📅 DEBUG: Sample End Date values: {measure_data['End Date'].head().tolist()}")
+    
     try:
         measure_data['End_Date_Parsed'] = pd.to_datetime(measure_data['End Date'], 
                                                         format='%m/%d/%y', errors='coerce')
+        st.write(f"📅 DEBUG: After date parsing - {len(measure_data)} rows")
+        
+        # Check how many valid dates we got
+        valid_dates = measure_data['End_Date_Parsed'].notna().sum()
+        st.write(f"📅 DEBUG: Valid dates found: {valid_dates}")
+        
         measure_data = measure_data.dropna(subset=['End_Date_Parsed'])
-    except:
+        st.write(f"📅 DEBUG: After dropping invalid dates - {len(measure_data)} rows")
+    except Exception as e:
+        st.write(f"❌ DEBUG: Date parsing failed with error: {str(e)}")
         return None
     
     if measure_data.empty:
+        st.write(f"❌ DEBUG: All data lost after date parsing")
         return None
     
     # Create Plotly figure with 3:2 aspect ratio
