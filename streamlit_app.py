@@ -471,6 +471,24 @@ def main():
             # Get all available facilities
             all_facilities = set(combined_data['Facility Name'].dropna().unique())
             
+            # Debug: Show available measure IDs
+            st.markdown("### 📊 Available Data Analysis")
+            available_measures = sorted(combined_data['Measure ID'].dropna().unique())
+            st.info(f"🔍 Found {len(available_measures)} measure types in data:")
+            st.info(f"📋 Measure IDs: {', '.join(available_measures[:10])}")
+            if len(available_measures) > 10:
+                st.info(f"... and {len(available_measures) - 10} more measures")
+            
+            # Show which target measures we're looking for
+            target_measures = ['SEP_1', 'OP_18b', 'SEV_SH_3HR', 'SEV_SEP_6HR', 'SEP_SH_3HR', 'SEP_SH_6HR']
+            found_targets = [m for m in target_measures if m in available_measures]
+            missing_targets = [m for m in target_measures if m not in available_measures]
+            
+            if found_targets:
+                st.success(f"✅ Found target measures: {', '.join(found_targets)}")
+            if missing_targets:
+                st.warning(f"⚠️ Missing target measures: {', '.join(missing_targets)}")
+            
             st.markdown("### 🔍 Facility Matching Results")
             facility_list = find_facility_matches(user_facility_list, all_facilities)
             
