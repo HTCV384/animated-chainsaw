@@ -690,35 +690,44 @@ def main():
             if sep1_fig:
                 st.plotly_chart(sep1_fig, use_container_width=True)
                 
-                # Pre-generate HTML content to avoid re-runs
-                import plotly.io as pio
-                sep1_html_str = pio.to_html(sep1_fig, include_plotlyjs='cdn')
+                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
+                try:
+                    # Import and configure kaleido/plotly
+                    import plotly.io as pio
+                    
+                    # Try to generate PNG image in advance
+                    sep1_png_bytes = sep1_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
+                    png_success = True
+                    png_error = None
+                except Exception as e:
+                    png_success = False
+                    png_error = str(e)
+                    # Generate HTML as fallback
+                    sep1_html_str = pio.to_html(sep1_fig, include_plotlyjs='cdn')
                 
-                # Direct download buttons for SEP_1
+                # Download button for SEP_1
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    try:
-                        # Try to generate PNG image
-                        img_bytes = sep1_fig.to_image(format="png", width=900, height=600, scale=2)
+                    if png_success:
                         st.download_button(
-                            label="💾 Save SEP_1 Chart (PNG)",
-                            data=img_bytes,
+                            label="💾 Save SEP_1 Chart",
+                            data=sep1_png_bytes,
                             file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
                             mime="image/png",
-                            key="download_sep1_png",
-                            help="Click to save the SEP_1 chart as a PNG image"
+                            key="download_sep1",
+                            help="Click to save the SEP_1 chart as a high-quality PNG image"
                         )
-                    except Exception as e:
-                        # Fallback to HTML download if PNG generation fails (pre-generated)
+                    else:
                         st.download_button(
                             label="💾 Save SEP_1 Chart (HTML)",
                             data=sep1_html_str,
                             file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
-                            key="download_sep1_html",
-                            help="PNG generation not available - downloading as interactive HTML chart"
+                            key="download_sep1",
+                            help="PNG generation failed - downloading as interactive HTML chart"
                         )
-                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
+                        st.warning(f"⚠️ PNG generation failed: {png_error}")
+                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No SEP_1 data available for selected facilities.")
             
@@ -736,35 +745,44 @@ def main():
             if op18b_fig:
                 st.plotly_chart(op18b_fig, use_container_width=True)
                 
-                # Pre-generate HTML content to avoid re-runs
-                import plotly.io as pio
-                op18b_html_str = pio.to_html(op18b_fig, include_plotlyjs='cdn')
+                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
+                try:
+                    # Import and configure kaleido/plotly
+                    import plotly.io as pio
+                    
+                    # Try to generate PNG image in advance
+                    op18b_png_bytes = op18b_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
+                    png_success = True
+                    png_error = None
+                except Exception as e:
+                    png_success = False
+                    png_error = str(e)
+                    # Generate HTML as fallback
+                    op18b_html_str = pio.to_html(op18b_fig, include_plotlyjs='cdn')
                 
-                # Direct download buttons for OP_18b
+                # Download button for OP_18b
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    try:
-                        # Try to generate PNG image
-                        img_bytes = op18b_fig.to_image(format="png", width=900, height=600, scale=2)
+                    if png_success:
                         st.download_button(
-                            label="💾 Save OP_18b Chart (PNG)",
-                            data=img_bytes,
+                            label="💾 Save OP_18b Chart",
+                            data=op18b_png_bytes,
                             file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
                             mime="image/png",
-                            key="download_op18b_png",
-                            help="Click to save the OP_18b chart as a PNG image"
+                            key="download_op18b",
+                            help="Click to save the OP_18b chart as a high-quality PNG image"
                         )
-                    except Exception as e:
-                        # Fallback to HTML download if PNG generation fails (pre-generated)
+                    else:
                         st.download_button(
                             label="💾 Save OP_18b Chart (HTML)",
                             data=op18b_html_str,
                             file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
-                            key="download_op18b_html",
-                            help="PNG generation not available - downloading as interactive HTML chart"
+                            key="download_op18b",
+                            help="PNG generation failed - downloading as interactive HTML chart"
                         )
-                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
+                        st.warning(f"⚠️ PNG generation failed: {png_error}")
+                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No OP_18b data available for selected facilities.")
             
@@ -782,35 +800,44 @@ def main():
             if severe_sepsis_fig:
                 st.plotly_chart(severe_sepsis_fig, use_container_width=True)
                 
-                # Pre-generate HTML content to avoid re-runs
-                import plotly.io as pio
-                severe_sepsis_html_str = pio.to_html(severe_sepsis_fig, include_plotlyjs='cdn')
+                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
+                try:
+                    # Import and configure kaleido/plotly
+                    import plotly.io as pio
+                    
+                    # Try to generate PNG image in advance
+                    severe_sepsis_png_bytes = severe_sepsis_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
+                    png_success = True
+                    png_error = None
+                except Exception as e:
+                    png_success = False
+                    png_error = str(e)
+                    # Generate HTML as fallback
+                    severe_sepsis_html_str = pio.to_html(severe_sepsis_fig, include_plotlyjs='cdn')
                 
-                # Direct download buttons for Severe Sepsis
+                # Download button for Severe Sepsis
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    try:
-                        # Try to generate PNG image
-                        img_bytes = severe_sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
+                    if png_success:
                         st.download_button(
-                            label="💾 Save Severe Sepsis Chart (PNG)",
-                            data=img_bytes,
+                            label="💾 Save Severe Sepsis Chart",
+                            data=severe_sepsis_png_bytes,
                             file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
                             mime="image/png",
-                            key="download_severe_png",
-                            help="Click to save the Severe Sepsis chart as a PNG image"
+                            key="download_severe",
+                            help="Click to save the Severe Sepsis chart as a high-quality PNG image"
                         )
-                    except Exception as e:
-                        # Fallback to HTML download if PNG generation fails (pre-generated)
+                    else:
                         st.download_button(
                             label="💾 Save Severe Sepsis Chart (HTML)",
                             data=severe_sepsis_html_str,
                             file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
-                            key="download_severe_html",
-                            help="PNG generation not available - downloading as interactive HTML chart"
+                            key="download_severe",
+                            help="PNG generation failed - downloading as interactive HTML chart"
                         )
-                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
+                        st.warning(f"⚠️ PNG generation failed: {png_error}")
+                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No severe sepsis data available for selected facilities.")
             
@@ -828,35 +855,44 @@ def main():
             if sepsis_fig:
                 st.plotly_chart(sepsis_fig, use_container_width=True)
                 
-                # Pre-generate HTML content to avoid re-runs
-                import plotly.io as pio
-                sepsis_html_str = pio.to_html(sepsis_fig, include_plotlyjs='cdn')
+                # Pre-generate PNG content to avoid re-runs and ensure kaleido is working
+                try:
+                    # Import and configure kaleido/plotly
+                    import plotly.io as pio
+                    
+                    # Try to generate PNG image in advance
+                    sepsis_png_bytes = sepsis_fig.to_image(format="png", width=900, height=600, scale=2, engine="kaleido")
+                    png_success = True
+                    png_error = None
+                except Exception as e:
+                    png_success = False
+                    png_error = str(e)
+                    # Generate HTML as fallback
+                    sepsis_html_str = pio.to_html(sepsis_fig, include_plotlyjs='cdn')
                 
-                # Direct download buttons for Sepsis Shock
+                # Download button for Sepsis Shock
                 col1, col2 = st.columns([1, 4])
                 with col1:
-                    try:
-                        # Try to generate PNG image
-                        img_bytes = sepsis_fig.to_image(format="png", width=900, height=600, scale=2)
+                    if png_success:
                         st.download_button(
-                            label="💾 Save Sepsis Shock Chart (PNG)",
-                            data=img_bytes,
+                            label="💾 Save Sepsis Shock Chart",
+                            data=sepsis_png_bytes,
                             file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
                             mime="image/png",
-                            key="download_sepsis_png",
-                            help="Click to save the Sepsis Shock chart as a PNG image"
+                            key="download_sepsis",
+                            help="Click to save the Sepsis Shock chart as a high-quality PNG image"
                         )
-                    except Exception as e:
-                        # Fallback to HTML download if PNG generation fails (pre-generated)
+                    else:
                         st.download_button(
                             label="💾 Save Sepsis Shock Chart (HTML)",
                             data=sepsis_html_str,
                             file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
-                            key="download_sepsis_html",
-                            help="PNG generation not available - downloading as interactive HTML chart"
+                            key="download_sepsis",
+                            help="PNG generation failed - downloading as interactive HTML chart"
                         )
-                        st.info("💡 PNG generation requires additional dependencies. Chart saved as interactive HTML instead.")
+                        st.warning(f"⚠️ PNG generation failed: {png_error}")
+                        st.info("💡 Install kaleido with: `pip install kaleido` for PNG support")
             else:
                 st.warning("⚠️ No sepsis shock data available for selected facilities.")
             
