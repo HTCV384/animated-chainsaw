@@ -696,21 +696,8 @@ def main():
                 </div>
                 """.format(len(data_dict)), unsafe_allow_html=True)
             
-            # Facility selection for charts
-            st.markdown("### 🎯 Select Facilities for Visualization")
-            selected_facilities = st.multiselect(
-                "Choose which facilities to display in charts:",
-                options=facility_list,
-                default=facility_list[:3] if len(facility_list) > 3 else facility_list,
-                help="Select specific facilities to display in the charts. You can select/deselect by clicking on the legend items."
-            )
-            
-            if not selected_facilities:
-                st.warning("⚠️ Please select at least one facility for visualization.")
-                return
-            
-            # Filter data for selected facilities
-            chart_data = result_df[result_df['Facility Name'].isin(selected_facilities)]
+            # Use all facility data for charts - users can control visibility via legend
+            chart_data = result_df
             
             # Generate interactive charts
             st.markdown("### 📈 Interactive Visualizations")
@@ -723,7 +710,7 @@ def main():
             """, unsafe_allow_html=True)
             
             sep1_fig = create_interactive_plot(
-                chart_data, 'SEP_1', 'SEP_1 Score Over Time', 'SEP_1 Score (%)', [0, 100], selected_facilities, verbose_mode
+                chart_data, 'SEP_1', 'SEP_1 Score Over Time', 'SEP_1 Score (%)', [0, 100], None, verbose_mode
             )
             
             if sep1_fig:
@@ -739,7 +726,7 @@ def main():
             """, unsafe_allow_html=True)
             
             op18b_fig = create_interactive_plot(
-                chart_data, 'OP_18b', 'Time in Emergency Department', 'Time in ED (minutes)', [60, 250], selected_facilities, verbose_mode
+                chart_data, 'OP_18b', 'Time in Emergency Department', 'Time in ED (minutes)', [60, 250], None, verbose_mode
             )
             
             if op18b_fig:
@@ -755,7 +742,7 @@ def main():
             """, unsafe_allow_html=True)
             
             severe_sepsis_fig = create_combined_sepsis_plot(
-                chart_data, ['SEV_SH_3HR', 'SEV_SEP_6HR'], 'Severe Sepsis Measures Over Time', selected_facilities, [0, 150]
+                chart_data, ['SEV_SH_3HR', 'SEV_SEP_6HR'], 'Severe Sepsis Measures Over Time', None, [0, 150]
             )
             
             if severe_sepsis_fig:
@@ -771,7 +758,7 @@ def main():
             """, unsafe_allow_html=True)
             
             sepsis_fig = create_combined_sepsis_plot(
-                chart_data, ['SEP_SH_3HR', 'SEP_SH_6HR'], 'Sepsis Shock Measures Over Time', selected_facilities
+                chart_data, ['SEP_SH_3HR', 'SEP_SH_6HR'], 'Sepsis Shock Measures Over Time', None
             )
             
             if sepsis_fig:
