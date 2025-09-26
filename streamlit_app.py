@@ -139,14 +139,16 @@ def fetch_azure_blob_data():
             blob_list = container_client.list_blobs()
             
             import re
-            hospital_pattern = re.compile(r'^hospitals_\d{2}_\d{4}/')
+            # Updated pattern to account for container prefix and look for specific file
+            hospital_pattern = re.compile(r'^cmstest/hospitals_\d{2}_\d{4}/Timely_and_Effective_Care-Hospital\.csv$')
             
             for blob in blob_list:
                 all_blobs.append(blob.name)
-                # Check if blob path matches hospital folder pattern
+                # Check if blob path matches the specific CSV file we need
                 if hospital_pattern.match(blob.name):
-                    folder_name = blob.name.split('/')[0]
-                    hospital_folders.add(folder_name)
+                    # Extract folder name (remove cmstest/ prefix and keep hospitals_XX_XXXX)
+                    folder_path = blob.name.replace('cmstest/', '').split('/')[0]
+                    hospital_folders.add(folder_path)
             
             hospital_folders = sorted(list(hospital_folders))
             
@@ -179,7 +181,8 @@ def fetch_azure_blob_data():
         data_dict = {}
         
         for folder in hospital_folders:
-            csv_blob_name = f"{folder}/Timely_and_Effective_Care-Hospital.csv"
+            # Use the full blob path including the container prefix
+            csv_blob_name = f"cmstest/{folder}/Timely_and_Effective_Care-Hospital.csv"
             
             try:
                 blob_client = container_client.get_blob_client(csv_blob_name)
