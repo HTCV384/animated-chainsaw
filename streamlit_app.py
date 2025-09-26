@@ -133,22 +133,46 @@ def fetch_azure_blob_data():
         
         # List all blobs in the container to find hospital folders
         hospital_folders = set()
-        blob_list = container_client.list_blobs()
+        all_blobs = []
         
-        import re
-        hospital_pattern = re.compile(r'^hospitals_\d{2}_\d{4}/')
-        
-        for blob in blob_list:
-            # Check if blob path matches hospital folder pattern
-            if hospital_pattern.match(blob.name):
-                folder_name = blob.name.split('/')[0]
-                hospital_folders.add(folder_name)
-        
-        hospital_folders = sorted(list(hospital_folders))
-        st.success(f"✓ Found {len(hospital_folders)} hospital folders: {', '.join(hospital_folders)}")
-        
-        if not hospital_folders:
-            st.warning("⚠ No hospital folders found matching pattern 'hospitals_XX_XXXX'")
+        try:
+            blob_list = container_client.list_blobs()
+            
+            import re
+            hospital_pattern = re.compile(r'^hospitals_\d{2}_\d{4}/')
+            
+            for blob in blob_list:
+                all_blobs.append(blob.name)
+                # Check if blob path matches hospital folder pattern
+                if hospital_pattern.match(blob.name):
+                    folder_name = blob.name.split('/')[0]
+                    hospital_folders.add(folder_name)
+            
+            hospital_folders = sorted(list(hospital_folders))
+            
+            # Debug information
+            st.info(f"🔍 Found {len(all_blobs)} total blobs in container")
+            if len(all_blobs) > 0:
+                st.info(f"📁 Sample blob names: {', '.join(all_blobs[:5])}")
+                if len(all_blobs) > 5:
+                    st.info(f"... and {len(all_blobs) - 5} more blobs")
+            
+            if hospital_folders:
+                st.success(f"✓ Found {len(hospital_folders)} hospital folders: {', '.join(hospital_folders)}")
+            else:
+                st.warning("⚠ No hospital folders found matching pattern 'hospitals_XX_XXXX'")
+                st.info("💡 **Debug Info:**")
+                st.info(f"- Total blobs found: {len(all_blobs)}")
+                if all_blobs:
+                    st.info(f"- First few blob names: {all_blobs[:10]}")
+                    st.info("- Expected pattern: folders named like 'hospitals_01_2021/', 'hospitals_02_2022/', etc.")
+                    st.info("- Check if your data is organized in folders or if folder names follow a different pattern")
+                else:
+                    st.info("- Container appears to be empty")
+                return {}
+                
+        except Exception as e:
+            st.error(f"❌ Error listing blobs: {str(e)}")
             return {}
         
         # Load data from discovered hospital folders
