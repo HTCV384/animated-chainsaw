@@ -690,7 +690,11 @@ def main():
             if sep1_fig:
                 st.plotly_chart(sep1_fig, use_container_width=True)
                 
-                # Direct download button for SEP_1
+                # Pre-generate HTML content to avoid re-runs
+                import plotly.io as pio
+                sep1_html_str = pio.to_html(sep1_fig, include_plotlyjs='cdn')
+                
+                # Direct download buttons for SEP_1
                 col1, col2 = st.columns([1, 4])
                 with col1:
                     try:
@@ -705,12 +709,10 @@ def main():
                             help="Click to save the SEP_1 chart as a PNG image"
                         )
                     except Exception as e:
-                        # Fallback to HTML download if PNG generation fails
-                        import plotly.io as pio
-                        html_str = pio.to_html(sep1_fig, include_plotlyjs='cdn')
+                        # Fallback to HTML download if PNG generation fails (pre-generated)
                         st.download_button(
                             label="💾 Save SEP_1 Chart (HTML)",
-                            data=html_str,
+                            data=sep1_html_str,
                             file_name=f"SEP_1_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
                             key="download_sep1_html",
@@ -734,7 +736,11 @@ def main():
             if op18b_fig:
                 st.plotly_chart(op18b_fig, use_container_width=True)
                 
-                # Direct download button for OP_18b
+                # Pre-generate HTML content to avoid re-runs
+                import plotly.io as pio
+                op18b_html_str = pio.to_html(op18b_fig, include_plotlyjs='cdn')
+                
+                # Direct download buttons for OP_18b
                 col1, col2 = st.columns([1, 4])
                 with col1:
                     try:
@@ -749,12 +755,10 @@ def main():
                             help="Click to save the OP_18b chart as a PNG image"
                         )
                     except Exception as e:
-                        # Fallback to HTML download if PNG generation fails
-                        import plotly.io as pio
-                        html_str = pio.to_html(op18b_fig, include_plotlyjs='cdn')
+                        # Fallback to HTML download if PNG generation fails (pre-generated)
                         st.download_button(
                             label="💾 Save OP_18b Chart (HTML)",
-                            data=html_str,
+                            data=op18b_html_str,
                             file_name=f"OP_18b_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
                             key="download_op18b_html",
@@ -778,7 +782,11 @@ def main():
             if severe_sepsis_fig:
                 st.plotly_chart(severe_sepsis_fig, use_container_width=True)
                 
-                # Direct download button for Severe Sepsis
+                # Pre-generate HTML content to avoid re-runs
+                import plotly.io as pio
+                severe_sepsis_html_str = pio.to_html(severe_sepsis_fig, include_plotlyjs='cdn')
+                
+                # Direct download buttons for Severe Sepsis
                 col1, col2 = st.columns([1, 4])
                 with col1:
                     try:
@@ -793,12 +801,10 @@ def main():
                             help="Click to save the Severe Sepsis chart as a PNG image"
                         )
                     except Exception as e:
-                        # Fallback to HTML download if PNG generation fails
-                        import plotly.io as pio
-                        html_str = pio.to_html(severe_sepsis_fig, include_plotlyjs='cdn')
+                        # Fallback to HTML download if PNG generation fails (pre-generated)
                         st.download_button(
                             label="💾 Save Severe Sepsis Chart (HTML)",
-                            data=html_str,
+                            data=severe_sepsis_html_str,
                             file_name=f"Severe_Sepsis_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
                             key="download_severe_html",
@@ -822,7 +828,11 @@ def main():
             if sepsis_fig:
                 st.plotly_chart(sepsis_fig, use_container_width=True)
                 
-                # Direct download button for Sepsis Shock
+                # Pre-generate HTML content to avoid re-runs
+                import plotly.io as pio
+                sepsis_html_str = pio.to_html(sepsis_fig, include_plotlyjs='cdn')
+                
+                # Direct download buttons for Sepsis Shock
                 col1, col2 = st.columns([1, 4])
                 with col1:
                     try:
@@ -837,12 +847,10 @@ def main():
                             help="Click to save the Sepsis Shock chart as a PNG image"
                         )
                     except Exception as e:
-                        # Fallback to HTML download if PNG generation fails
-                        import plotly.io as pio
-                        html_str = pio.to_html(sepsis_fig, include_plotlyjs='cdn')
+                        # Fallback to HTML download if PNG generation fails (pre-generated)
                         st.download_button(
                             label="💾 Save Sepsis Shock Chart (HTML)",
-                            data=html_str,
+                            data=sepsis_html_str,
                             file_name=f"Sepsis_Shock_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                             mime="text/html",
                             key="download_sepsis_html",
